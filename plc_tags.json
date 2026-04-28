@@ -1,0 +1,92 @@
+{
+  "_doc": [
+    "Mapare ID-uri logice (folosite de codul Python) -> nume tag din PLC.",
+    "Te rog EDITEAZA DOAR campul 'plc_tag' daca vrei alta denumire la el.",
+    "ID-urile (cheile) NU se schimba (codul meu va depinde de ele).",
+    "Tipuri suportate: BOOL, SINT, INT, DINT, REAL.",
+    "INPUTS = citim de la PLC. OUTPUTS = scriem in PLC."
+  ],
+  "plc": {
+    "ip": "192.168.1.10",
+    "slot": 0,
+    "poll_interval_ms": 100,
+    "heartbeat_interval_ms": 500,
+    "scale_factor": 1000,
+    "_comment_scale": "valoare_mm * scale_factor = int trimis la PLC. 1000 => 1/1000 mm (micrometri)."
+  },
+
+  "inputs": {
+    "_comment": "============ INTRARI: PLC -> PC (ADECCO citeste)    ============",
+
+    "CMD_START": {
+      "plc_tag": "ADECCO_CMD_START",
+      "type": "BOOL",
+      "desc": "Comanda START de la PLC -> incepe ciclu de masurare"
+    },
+    "CMD_RESET": {
+      "plc_tag": "ADECCO_CMD_RESET",
+      "type": "BOOL",
+      "desc": "Reset stare/eroare cerut de PLC"
+    },
+    "CMD_ABORT": {
+      "plc_tag": "ADECCO_CMD_ABORT",
+      "type": "BOOL",
+      "desc": "Abort masurare in curs"
+    },
+    "TYRE_CODE": {
+      "plc_tag": "ADECCO_TYRE_CODE",
+      "type": "DINT",
+      "desc": "Cod produs (optional) - identifica reteta"
+    }
+  },
+
+  "outputs": {
+    "_comment": "============ IESIRI: PC -> PLC (ADECCO scrie) ============",
+
+    "HEARTBEAT": {
+      "plc_tag": "ADECCO_HEARTBEAT",
+      "type": "DINT",
+      "desc": "Counter incrementat periodic - PLC verifica sa creasca"
+    },
+    "STS_READY": {
+      "plc_tag": "ADECCO_STS_READY",
+      "type": "BOOL",
+      "desc": "Sistemul gata, robotul in HOME, asteapta START"
+    },
+    "STS_RUNNING": {
+      "plc_tag": "ADECCO_STS_RUNNING",
+      "type": "BOOL",
+      "desc": "Masurarea in curs"
+    },
+    "STS_DONE": {
+      "plc_tag": "ADECCO_STS_DONE",
+      "type": "BOOL",
+      "desc": "Masurarea terminata cu succes"
+    },
+    "STS_ERROR": {
+      "plc_tag": "ADECCO_STS_ERROR",
+      "type": "BOOL",
+      "desc": "Stare eroare - se reseteaza cu CMD_RESET"
+    },
+    "STS_ROBOT_HOME": {
+      "plc_tag": "ADECCO_STS_ROBOT_HOME",
+      "type": "BOOL",
+      "desc": "Robot in HOME (sigur pt safety PLC)"
+    },
+    "STS_ROBOT_IN_POS": {
+      "plc_tag": "ADECCO_STS_ROBOT_IN_POS",
+      "type": "BOOL",
+      "desc": "Robot in pozitia de masurare"
+    },
+    "RES_VALUE": {
+      "plc_tag": "ADECCO_RES_VALUE",
+      "type": "DINT",
+      "desc": "VALOAREA MASURATA x scale_factor (12345 = 12.345 mm cu scale=1000). Citita de PLC pe rising edge STS_DONE."
+    },
+    "ERROR_CODE": {
+      "plc_tag": "ADECCO_ERROR_CODE",
+      "type": "DINT",
+      "desc": "Cod eroare (0=ok, 1=timeout, 2=detect fail, 3=robot fail, ...)"
+    }
+  }
+}
