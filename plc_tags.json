@@ -37,6 +37,11 @@
       "plc_tag": "ADECCO_TYRE_CODE",
       "type": "DINT",
       "desc": "Cod produs (optional) - identifica reteta"
+    },
+    "SAFETY_ACTIVE": {
+      "plc_tag": "ADECCO_SAFETY_ACTIVE",
+      "type": "BOOL",
+      "desc": "1 = eveniment safety activ (E-Stop apasat / usa deschisa). La trecerea 0->1 abandonam imediat orice operatie. Cat timp e 1, refuzam CMD_START."
     }
   },
 
@@ -86,7 +91,12 @@
     "ERROR_CODE": {
       "plc_tag": "ADECCO_ERROR_CODE",
       "type": "DINT",
-      "desc": "Cod eroare (0=ok, 1=timeout, 2=detect fail, 3=robot fail, ...)"
+      "desc": "Cod eroare (0=ok, 1=timeout, 2=detect fail, 3=robot fail, 99=safety event, ...)"
+    },
+    "STS_SAFETY_TRIPPED": {
+      "plc_tag": "ADECCO_STS_SAFETY_TRIPPED",
+      "type": "BOOL",
+      "desc": "1 = noi am detectat SAFETY_ACTIVE si am abandonat operatia. Confirmare pentru PLC."
     }
   }
 }

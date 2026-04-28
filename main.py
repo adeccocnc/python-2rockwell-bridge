@@ -384,11 +384,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self._log("Simulare EROARE -> STS_ERROR=1, ERROR_CODE=1", "#FF3B30")
 
     def _on_sim_reset(self):
+        # Daca safety inca e activ, nu permitem revenirea in READY
+        if getattr(self, '_safety_active', False):
+            self._log("RESET ignorat - SAFETY_ACTIVE inca este 1", "#FF3B30")
+            return
         self.request_write.emit("STS_ERROR", False)
         self.request_write.emit("ERROR_CODE", 0)
         self.request_write.emit("STS_DONE", False)
+        self.request_write.emit("STS_SAFETY_TRIPPED", False)
         self.request_write.emit("STS_READY", True)
         self._log("RESET -> stari curatate", "#FFC857")
+
+    def _on_safety_tripped(self):
+        """Apelat la rising edge SAFETY_ACTIVE 0->1: abandon imediat tot."""
+        self._log("⚠ SAFETY ACTIVE - abandon imediat operatie", "#FF3B30")
+        self.request_write.emit("STS_RUNNING", False)
+        self.request_write.emit("STS_DONE", False)
+        self.request_write.emit("STS_READY", False)
+        self.request_write.emit("STS_ERROR", True)
+        self.request_write.emit("ERROR_CODE", 99)
+        self.request_write.emit("STS_SAFETY_TRIPPED", True)
+        # Aici se pot adauga apeluri pt oprire robot/camere
+        # ex: self._fairino.stop() in integrarea finala
 
     def _on_worker_connected(self, ok, msg):
         if ok:
@@ -417,12 +434,23 @@ class MainWindow(QtWidgets.QMainWindow):
                 it.setBackground(QtGui.QColor("#FF9500"))
                 QtCore.QTimer.singleShot(500,
                     lambda r=row: self.tblInputs.item(r, 3).setBackground(QtGui.QColor(0, 0, 0, 0)))
+        # SAFETY_ACTIVE — verificat PRIMUL pt prioritate maxima
+        prev_safety = getattr(self, '_prev_safety', False)
+        new_safety = bool(vals_by_id.get("SAFETY_ACTIVE", prev_safety))
+        self._safety_active = new_safety  # vizibil pt _on_sim_reset si CMD_START
+        if "SAFETY_ACTIVE" in vals_by_id and new_safety and not prev_safety:
+            self._on_safety_tripped()
+        if "SAFETY_ACTIVE" in vals_by_id:
+            self._prev_safety = new_safety
         # Detect rising edge pe CMD_START -> declanseaza simularea
         prev_start = getattr(self, '_prev_start', False)
         new_start = bool(vals_by_id.get("CMD_START", prev_start))
         if "CMD_START" in vals_by_id and new_start and not prev_start:
-            self._log("[PLC] CMD_START rising edge -> declansez ciclu simulat", "#FF9500")
-            self._on_sim_measure()
+            if self._safety_active:
+                self._log("[PLC] CMD_START IGNORAT - safety activ", "#FF3B30")
+            else:
+                self._log("[PLC] CMD_START rising edge -> declansez ciclu simulat", "#FF9500")
+                self._on_sim_measure()
         if "CMD_START" in vals_by_id:
             self._prev_start = new_start
         # Reset rising edge
